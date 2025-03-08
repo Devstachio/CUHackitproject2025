@@ -1,7 +1,7 @@
 import GradientWrapper from "@/components/GradientWrapper"
 import Image from "next/image"
 import NavLink from "../NavLink"
-import HeroImg from "@/public/images/hero.svg"
+import HeroImg from "@/public/images/hero.png"
 import LayoutEffect from "@/components/LayoutEffect"
 
 const Hero = () => (
@@ -27,7 +27,8 @@ const Hero = () => (
                             </p>
                         <div className="flex justify-center font-medium text-sm">
                             <NavLink
-                                href="/#pricing"
+                                href="/dashboard
+    "
                                 className="flex items-center text-white bg-yellow-500 hover:bg-yellow-300 active:bg-yellow-700 "
                             >
                                 Get Started
@@ -40,7 +41,7 @@ const Hero = () => (
                     <GradientWrapper className="mt-16 sm:mt-28" wrapperClassName="max-w-3xl h-[250px] top-12 inset-0 sm:h-[300px] lg:h-[650px]">
                         <Image
                             src={HeroImg}
-                            className="shadow-lg rounded-2xl"
+                            className="shadow-lg rounded-2xl border border-gray-400 border-4"
                             alt="Mailgo"
                         />
                     </GradientWrapper>
