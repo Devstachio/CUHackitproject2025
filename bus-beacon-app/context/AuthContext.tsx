@@ -139,23 +139,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Logout function
-  const logout = async () => {
-    try {
-      setLoading(true);
-      
+  // Improved logout function
+const logout = async () => {
+  try {
+    setLoading(true);
+    
+    // Check if there's an active session first
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      // Only attempt to sign out if there's an active session
       const { error } = await supabase.auth.signOut();
-      
       if (error) throw error;
-      
-      setUser(null);
-      router.replace('/login');
-    } catch (err) {
-      console.error('Logout error:', err);
-      setError(err as Error);
-    } finally {
-      setLoading(false);
+    } else {
+      console.log('No active session found during logout');
     }
-  };
+    
+    // Regardless of whether there was a session, clear the local state
+    setUser(null);
+    
+    // Navigate to login screen
+    router.replace('/login');
+  } catch (err) {
+    console.error('Logout error:', err);
+    setError(err as Error);
+    
+    // Even if there's an error, still clear the local state and redirect
+    setUser(null);
+    router.replace('/login');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Driver clock-in function
   const clockIn = async (isActive: boolean) => {
