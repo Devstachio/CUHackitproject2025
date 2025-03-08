@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/CognitoAuthContext';
 import { useLocation } from '../../context/LocationContext';
 import { COLORS, COMMON_STYLES, DARK_MAP_STYLE } from '../../constants/AppStyles';
 

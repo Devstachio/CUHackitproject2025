@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as Location from 'expo-location';
-import { useAuth } from './AuthContext';
+import { useAuth } from './CognitoAuthContext';
 import { setupYjsConnection, updateLocation } from '../Utils/yjsUtils';
 
 // Sample bus data

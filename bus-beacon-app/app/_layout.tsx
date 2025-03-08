@@ -1,9 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider } from '../context/AuthContext';
+import { Amplify } from 'aws-amplify';
+import { AuthProvider } from '../context/CognitoAuthContext';
 import { LocationProvider } from '../context/LocationContext';
 import { COLORS } from '../constants/AppStyles';
+import awsConfig from '../aws-exports';
+
+// Configure AWS Amplify
+console.log("[DEBUG] AWS Amplify Configuration:", JSON.stringify(awsConfig, null, 2));
+Amplify.configure(awsConfig);
+console.log("[DEBUG] Amplify configured");
 
 export default function RootLayout() {
   return (

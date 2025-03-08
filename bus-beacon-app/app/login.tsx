@@ -11,13 +11,12 @@ import {
   SafeAreaView
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/CognitoAuthContext';
 import { COLORS, COMMON_STYLES } from '../constants/AppStyles';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState<'parent' | 'driver'>('parent');
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuth();
@@ -31,20 +30,26 @@ export default function LoginScreen() {
     setIsLoading(true);
     
     try {
-      const result = await login(username, password, userType);
+      console.log("[DEBUG] Login.tsx: Calling login function with username:", username);
+      const result = await login(username, password);
+      console.log("[DEBUG] Login.tsx: Login result:", JSON.stringify(result, null, 2));
       
       if (!result.success) {
+        console.log("[DEBUG] Login.tsx: Login failed with message:", result.message);
         Alert.alert('Login Failed', result.message || 'Please check your credentials');
+      } else {
+        console.log("[DEBUG] Login.tsx: Login successful");
       }
     } catch (error) {
+      console.error("[DEBUG] Login.tsx: Error during login:", error);
+      if (error instanceof Error) {
+        console.log("[DEBUG] Error name:", error.name);
+        console.log("[DEBUG] Error message:", error.message);
+      }
       Alert.alert('Error', 'An error occurred during login');
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  const toggleUserType = () => {
-    setUserType(userType === 'parent' ? 'driver' : 'parent');
   };
   
   return (
@@ -63,7 +68,7 @@ export default function LoginScreen() {
         
         <View style={styles.formContainer}>
           <Text style={styles.loginTitle}>
-            {userType === 'parent' ? 'Parent Login' : 'Bus Driver Login'}
+            Bus Tracker Login
           </Text>
           
           <TextInput
@@ -94,24 +99,9 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={styles.switchButton}
-            onPress={toggleUserType}
-          >
-            <Text style={styles.switchButtonText}>
-              Switch to {userType === 'parent' ? 'Driver' : 'Parent'} Login
-            </Text>
-          </TouchableOpacity>
-          
           <View style={styles.helpContainer}>
             <Text style={styles.helpText}>
-              Use the following test credentials:
-            </Text>
-            <Text style={styles.helpText}>
-              Parent: parent1 / password123
-            </Text>
-            <Text style={styles.helpText}>
-              Driver: driver1 / password123
+              This app is for authorized users only. Contact your administrator if you don't have credentials.
             </Text>
           </View>
         </View>
@@ -192,14 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  switchButton: {
-    padding: 15,
-    alignItems: 'center',
-  },
-  switchButtonText: {
-    color: COLORS.primary,
-    fontSize: 14,
-  },
   helpContainer: {
     marginTop: 30,
     padding: 15,
@@ -212,5 +194,6 @@ const styles = StyleSheet.create({
     color: '#CCC',
     fontSize: 12,
     marginBottom: 4,
+    textAlign: 'center',
   },
 });

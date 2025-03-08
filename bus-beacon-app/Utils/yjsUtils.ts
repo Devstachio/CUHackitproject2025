@@ -8,7 +8,7 @@ export const setupYjsConnection = async (busId: string): Promise<any> => {
     const doc = new Y.Doc();
     
     // Connect to the WebSocket server
-    const wsServerUrl = 'ws://your-ec2-instance-url:1234';
+    const wsServerUrl = 'ws://http://54.213.236.29:8080';
     const provider = new WebsocketProvider(wsServerUrl, busId, doc);
     
     // Wait for connection
