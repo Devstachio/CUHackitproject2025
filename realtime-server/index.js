@@ -10,7 +10,7 @@ const express = require('express')
 const cors = require('cors')
 
 // Configuration
-const PORT = process.env.PORT || 1234
+const PORT = process.env.PORT || 80
 const HOST = process.env.HOST || '0.0.0.0'
 
 // Create an express app for health checks and basic info
