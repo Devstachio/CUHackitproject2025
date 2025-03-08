@@ -4,8 +4,43 @@ import Brand from "@/components/ui/Brand";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { GoogleIcon } from "@/components/Icons";
+import { useState } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "@/lib/supabase";
+
 
 export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const router = useRouter();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      router.push('/');
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -29,12 +64,14 @@ export default function Login() {
               </p>
             </div>
           </div>
-          <form onSubmit={(e) => e.preventDefault()} className='mt-8 space-y-5'>
+          <form onSubmit={handleLogin} className='mt-8 space-y-5'>
             <div>
-              <label className='font-medium'>Username</label>
+              <label className='font-medium'>Email</label>
               <Input
-                type='username'
+                type='email'
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className='w-full mt-2 text-zinc-300 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
               />
             </div>
@@ -43,14 +80,18 @@ export default function Login() {
               <Input
                 type='password'
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className='w-full mt-2 text-zinc-300 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
               />
             </div>
-            <Button className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-600 ring-offset-2 focus:ring rounded-lg'>
+            {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+            <Button type="submit" className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-600 ring-offset-2 focus:ring rounded-lg'>
               Sign In
             </Button>
             <button
               type='button'
+              onClick={handleGoogleLogin}
               className='w-full flex items-center justify-center gap-x-3 py-2.5 border border-gray-800 rounded-lg text-sm font-medium bg-gray-800/40 hover:bg-gray-800 ring-purple-500 focus:ring duration-150'>
               <GoogleIcon />
               Continue with Google

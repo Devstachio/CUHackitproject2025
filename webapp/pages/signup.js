@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 import Head from "next/head";
 import Link from "next/link";
 import Brand from "@/components/ui/Brand";
@@ -31,15 +29,27 @@ export default function SignUp() {
                             </p>
                         </div>
                     </div>
-                    <form onSubmit={(e) => e.preventDefault()} className='mt-8 space-y-5'>
+                    <form className='mt-8 space-y-5'>
+                        {/* Username Input */}
                         <div>
                             <label className='font-medium'>Username</label>
                             <Input
                                 type='text'
                                 required
+                                
+                                
                                 className='w-full mt-2 text-zinc-200 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
                             />
                         </div>
+                        <div>
+                            <label className='font-medium'>Email</label>
+                            <Input
+                                type='email'
+                                required
+                                className='w-full mt-2 text-zinc-200 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
+                            />
+                        </div>
+                        {/* Password Input */}
                         <div>
                             <label className='font-medium'>Password</label>
                             <Input
@@ -48,9 +58,11 @@ export default function SignUp() {
                                 className='w-full mt-2 text-zinc-300 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
                             />
                         </div>
-                        <Button className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-600 ring-offset-2 focus:ring rounded-lg'>
+                        {/* Sign Up Button */}
+                        <Button type="submit" className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-600 ring-offset-2 focus:ring rounded-lg'>
                             Sign Up
                         </Button>
+                        {/* Continue with Google Button */}
                         <button
                             type='button'
                             className='w-full flex items-center justify-center gap-x-3 py-2.5 border border-gray-800 rounded-lg text-sm font-medium bg-gray-800/40 hover:bg-gray-800 ring-purple-500 focus:ring duration-150'>

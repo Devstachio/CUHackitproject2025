@@ -8,16 +8,18 @@ const NavHeader = ({ onClick, state, menuBtnEl }) => (
             <Link href="/">
                 <Brand />
             </Link>
-            <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-yellow-400">Bus</h1>
-                <h1 className="text-2xl font-bold text-white">Beacon</h1>
-            </div>
+            <Link href="/">
+                <div className="flex items-center">
+                    <h1 className="text-2xl font-bold text-yellow-400">Bus</h1>
+                    <h1 className="text-2xl font-bold text-white">Beacon</h1>
+                </div>
+            </Link>
             <div className="position-relative hidden md:block">
                 <Image
                     src="/images/bus2.png"
                     alt="A Yellow Bus"
-                    width={60}
-                    height={60}
+                    width={80}
+                    height={80}
                     priority
                 />
             </div>
