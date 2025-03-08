@@ -25,7 +25,7 @@ export default function SignUp() {
                                 Have an account?{" "}
                                 <Link
                                     href='/login'
-                                    className='font-medium text-yellow-500 hover:text-yellow-600 duration-150'>
+                                    className='font-medium text-[#ffd800] hover:text-yellow-600 duration-150'>
                                     Login
                                 </Link>
                             </p>
@@ -48,7 +48,7 @@ export default function SignUp() {
                                 className='w-full mt-2 text-zinc-300 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
                             />
                         </div>
-                        <Button className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-200 ring-offset-2 focus:ring rounded-lg'>
+                        <Button className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-600 ring-offset-2 focus:ring rounded-lg'>
                             Sign Up
                         </Button>
                         <button
