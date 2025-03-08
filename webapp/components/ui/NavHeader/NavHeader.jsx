@@ -16,8 +16,8 @@ const NavHeader = ({ onClick, state, menuBtnEl }) => (
                 <Image
                     src="/images/bus2.png"
                     alt="A Yellow Bus"
-                    width={60}
-                    height={60}
+                    width={80}
+                    height={80}
                     priority
                 />
             </div>

@@ -23,7 +23,7 @@ const Navbar = () => {
     }, [])
 
     return (
-        <header className='relative border-b border-white bg-black'>
+        <header className='relative border-b-8 border-double border-[#f7b500] bg-black'>
             <div className="custom-screen md:hidden">
                 <NavHeader menuBtnEl={menuBtnEl} state={state} onClick={() => setState(!state)} />
             </div>
@@ -61,5 +61,15 @@ const Navbar = () => {
         </header>
     )
 }
-
+// $(function(){
+// 	$('/signup').click(function(){
+// 		e1 = $('Bussy');
+//         e1.addClass('bus2.png');
+//         e1.one('webkitAnimationEnd oanimationend msAnimationEnd animationend',
+//         function (e) {
+//             e1.removeClass('animate');
+//         });
+// 	});
+// });
+// export default NavHeader
 export default Navbar
