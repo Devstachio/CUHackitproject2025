@@ -1,54 +1,95 @@
-// This is a placeholder for YJS integration
-// In a real application, you would implement proper YJS connection here
-
-/**
- * Sets up a YJS connection for real-time location updates
- * @param busId The bus ID to connect to
- * @returns A YJS document or connection object
- */
 export const setupYjsConnection = async (busId: string): Promise<any> => {
-  // This is a placeholder for YJS setup
-  console.log(`[Mock] Setting up YJS connection for bus ${busId}`);
-  
-  // For demonstration purposes, we'll return a mock document
-  return {
-    // This is a mock YJS document with mock methods
-    busId,
-    destroy: () => console.log(`[Mock] Destroying YJS connection for bus ${busId}`),
-    // Additional YJS document properties and methods would go here
-  };
+  try {
+    // Import the YJS modules
+    const Y = await import('yjs');
+    const { WebsocketProvider } = await import('y-websocket');
+    
+    // Create a new YJS document
+    const doc = new Y.Doc();
+    
+    // Connect to the WebSocket server
+    const wsServerUrl = 'ws://your-ec2-instance-url:1234';
+    const provider = new WebsocketProvider(wsServerUrl, busId, doc);
+    
+    // Wait for connection
+    await new Promise<void>((resolve) => {
+      provider.on('status', (event: { status: string }) => {
+        if (event.status === 'connected') {
+          resolve();
+        }
+      });
+      
+      // If already connected, resolve immediately
+      if (provider.wsconnected) {
+        resolve();
+      }
+    });
+    
+    console.log(`Connected to YJS server for bus ${busId}`);
+    
+    // Return the doc and provider
+    return {
+      doc,
+      provider,
+      busId,
+      destroy: () => {
+        provider.disconnect();
+        doc.destroy();
+      }
+    };
+  } catch (error) {
+    console.error('Error connecting to YJS server:', error);
+    throw error;
+  }
 };
 
-/**
- * Updates the location information in the YJS document
- * @param doc The YJS document
- * @param busId The bus ID
- * @param locationData The location data to update
- */
-export const updateLocation = (doc: any, busId: string, locationData: any): void => {
-  // This is a placeholder for YJS update
-  // In a real application, you would update the shared YJS document
-  console.log(`[Mock] Updating location for bus ${busId}:`, locationData);
+export const updateLocation = (connection: any, busId: string, locationData: any): void => {
+  if (!connection || !connection.doc) {
+    console.error('No YJS connection available');
+    return;
+  }
   
-  // Since we're in demo mode without a YJS server, we don't do anything with this data
-  // In a real app, you'd use something like:
-  // const locationMap = doc.getMap('locations');
-  // locationMap.set(busId, locationData);
+  try {
+    // Get or create the location map
+    const locationMap = connection.doc.getMap('locations');
+    
+    // Update the location
+    locationMap.set(busId, locationData);
+    
+    console.log(`Updated location for bus ${busId}:`, locationData);
+  } catch (error) {
+    console.error('Error updating location in YJS:', error);
+  }
 };
 
-/**
- * Subscribes to location updates from the YJS document
- * @param doc The YJS document
- * @param callback The callback to call when location updates
- * @returns A function to unsubscribe
- */
-export const subscribeToLocationUpdates = (doc: any, callback: (data: any) => void): (() => void) => {
-  // This is a placeholder for YJS subscription
-  console.log('[Mock] Subscribing to location updates');
+export const subscribeToLocationUpdates = (connection: any, callback: (data: any) => void): (() => void) => {
+  if (!connection || !connection.doc) {
+    console.error('No YJS connection available');
+    return () => {};
+  }
   
-  // No actual subscription since we don't have a YJS server
-  // Just return the unsubscribe function
-  return () => {
-    console.log('[Mock] Unsubscribed from location updates');
-  };
+  try {
+    // Get the location map
+    const locationMap = connection.doc.getMap('locations');
+    
+    // Listen for changes
+    const observer = () => {
+      const locations = Object.fromEntries(locationMap.entries());
+      callback(locations);
+    };
+    
+    // Initial call
+    observer();
+    
+    // Subscribe to changes
+    locationMap.observe(observer);
+    
+    // Return unsubscribe function
+    return () => {
+      locationMap.unobserve(observer);
+    };
+  } catch (error) {
+    console.error('Error subscribing to location updates:', error);
+    return () => {};
+  }
 };
