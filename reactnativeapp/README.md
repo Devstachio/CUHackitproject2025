@@ -1,1 +1,0 @@
-This is for the react native mobile app
