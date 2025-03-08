@@ -48,7 +48,7 @@ export default function SignUp() {
                                 className='w-full mt-2 text-zinc-300 bg-zinc-800 focus:bg-zinc-900 focus:border-zinc-800'
                             />
                         </div>
-                        <Button className='w-full text-gray-800 bg-gray-100 hover:bg-gray-200 ring-offset-2 focus:ring rounded-lg'>
+                        <Button className='w-full text-gray-800 bg-[#ffd800] hover:bg-yellow-200 ring-offset-2 focus:ring rounded-lg'>
                             Sign Up
                         </Button>
                         <button
