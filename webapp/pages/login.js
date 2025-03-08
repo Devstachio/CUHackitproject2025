@@ -6,7 +6,7 @@ import Input from "@/components/ui/Input";
 import { GoogleIcon } from "@/components/Icons";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../supabaseClient";
 
 
 export default function Login() {
