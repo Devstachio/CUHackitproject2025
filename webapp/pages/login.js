@@ -9,10 +9,10 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>Login - Mailgo</title>
+        <title>Login - BusBeacon</title>
       </Head>
-      <main className='w-full h-screen flex flex-col items-center justify-center px-4'>
-        <div className='max-w-sm w-full text-gray-300'>
+      <main className='w-full h-screen flex flex-col items-center justify-center  px-4'>
+        <div className='max-w-sm w-full text-gray-300 bg-zinc-900/80 rounded-xl p-8 space-y-5'>
           <div className='text-center'>
             <Brand className='mx-auto w-32' />
             <div className='mt-5 space-y-2'>
@@ -22,18 +22,18 @@ export default function Login() {
               <p className=''>
                 Don't have an account?{" "}
                 <Link
-                  href='/#pricing'
-                  className='font-medium text-purple-500 hover:text-purple-600 duration-150'>
-                  Get access
+                  href='/signup'
+                  className='font-medium text-yellow-500 hover:text-yellow-600 duration-150'>
+                  Sign Up
                 </Link>
               </p>
             </div>
           </div>
           <form onSubmit={(e) => e.preventDefault()} className='mt-8 space-y-5'>
             <div>
-              <label className='font-medium'>Email</label>
+              <label className='font-medium'>Username</label>
               <Input
-                type='email'
+                type='username'
                 required
                 className='w-full mt-2 text-gray-300 bg-gray-800 focus:bg-gray-900 focus:border-gray-800'
               />
