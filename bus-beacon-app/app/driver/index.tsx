@@ -11,14 +11,16 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/CognitoAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
 import { COLORS, COMMON_STYLES, DARK_MAP_STYLE } from '../../constants/AppStyles';
+import { supabase, getDriverBus } from '../../lib/supabase';
 
 export default function DriverHomeScreen() {
   const { user, logout, clockIn } = useAuth();
   const { driverLocation, hasLocationPermission, isTrackingActive } = useLocation();
   const [isActive, setIsActive] = useState(user?.isActive || false);
+  const [busDetails, setBusDetails] = useState<any>(null);
   
   // Format current time
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -30,6 +32,24 @@ export default function DriverHomeScreen() {
     
     return () => clearInterval(timer);
   }, []);
+
+  // Fetch bus details
+  useEffect(() => {
+    const fetchBusDetails = async () => {
+      if (user && user.id) {
+        try {
+          const driverBus = await getDriverBus(user.id);
+          if (driverBus) {
+            setBusDetails(driverBus.buses);
+          }
+        } catch (error) {
+          console.error("Error fetching bus details:", error);
+        }
+      }
+    };
+    
+    fetchBusDetails();
+  }, [user]);
   
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -58,15 +78,23 @@ export default function DriverHomeScreen() {
             text: 'Clock Out', 
             style: 'destructive',
             onPress: async () => {
-              await clockIn(false);
-              setIsActive(false);
+              try {
+                await clockIn(false);
+                setIsActive(false);
+              } catch (error) {
+                Alert.alert('Error', 'Failed to clock out. Please try again.');
+              }
             }
           }
         ]
       );
     } else {
-      await clockIn(true);
-      setIsActive(true);
+      try {
+        await clockIn(true);
+        setIsActive(true);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to clock in. Please try again.');
+      }
     }
   };
   
@@ -97,7 +125,7 @@ export default function DriverHomeScreen() {
           <View>
             <Text style={styles.welcomeText}>Welcome,</Text>
             <Text style={styles.nameText}>{user?.name || 'Driver'}</Text>
-            <Text style={styles.busInfo}>Bus: {user?.busId || 'Unknown'}</Text>
+            <Text style={styles.busInfo}>Bus: {busDetails?.name || 'Unknown'}</Text>
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color={COLORS.primary} />
@@ -157,7 +185,7 @@ export default function DriverHomeScreen() {
                   latitude: driverLocation.latitude,
                   longitude: driverLocation.longitude,
                 }}
-                title={`Bus ${user?.busId || 'Unknown'}`}
+                title={`Bus ${busDetails?.name || 'Unknown'}`}
                 description={isActive ? 'Active' : 'Inactive'}
               >
                 <View style={styles.markerContainer}>
@@ -189,11 +217,11 @@ export default function DriverHomeScreen() {
           <Text style={styles.infoTitle}>Bus Information</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Bus ID:</Text>
-            <Text style={styles.infoValue}>{user?.busId || 'Unknown'}</Text>
+            <Text style={styles.infoValue}>{busDetails?.name || 'Unknown'}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Route:</Text>
-            <Text style={styles.infoValue}>Route {user?.busId?.replace('BUS', '') || 'Unknown'}</Text>
+            <Text style={styles.infoValue}>{busDetails?.route_name || 'Unknown'}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Tracking Status:</Text>

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import { useAuth } from '../../context/CognitoAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants/AppStyles';
 
 export default function ParentLayout() {

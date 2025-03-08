@@ -1,58 +1,21 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as Location from 'expo-location';
-import { useAuth } from './CognitoAuthContext';
-import { setupYjsConnection, updateLocation } from '../Utils/yjsUtils';
-
-// Sample bus data
-const SAMPLE_BUS_DATA = {
-  'BUS001': { 
-    id: 'BUS001', 
-    name: 'Route A', 
-    location: { latitude: 37.7749, longitude: -122.4194 },
-    driverName: 'John Driver',
-    status: 'active',
-    lastUpdated: new Date().toISOString(),
-    estimatedArrival: '8:30 AM',
-  },
-  'BUS002': { 
-    id: 'BUS002', 
-    name: 'Route B', 
-    location: { latitude: 37.3352, longitude: -121.8811 },
-    driverName: 'Sarah Driver',
-    status: 'active',
-    lastUpdated: new Date().toISOString(),
-    estimatedArrival: '8:45 AM',
-  },
-};
-
-type LocationCoords = {
-  latitude: number;
-  longitude: number;
-};
-
-type BusInfo = {
-  id: string;
-  name: string;
-  location: LocationCoords;
-  driverName: string;
-  status: string;
-  lastUpdated: string;
-  estimatedArrival: string;
-};
-
-type BusLocations = {
-  [key: string]: BusInfo;
-};
-
-type ChildBusInfo = {
-  childName: string;
-  bus: BusInfo | { status: string };
-};
+import { useAuth } from './AuthContext';
+import { 
+  supabase, 
+  updateBusLocation, 
+  getChildrenWithBuses, 
+  subscribeToLocationUpdates, 
+  calculateEstimatedArrival 
+} from '../lib/supabase';
+import { LocationCoords, ChildBusInfo } from '../lib/types';
 
 type LocationContextType = {
   driverLocation: LocationCoords | null;
-  busLocations: BusLocations;
+  childrenBuses: ChildBusInfo[];
+  busLocations: any[];
   getChildrenBuses: () => ChildBusInfo[];
+  refreshChildrenBuses: () => Promise<void>;
   hasLocationPermission: boolean | null;
   isTrackingActive: boolean;
 };
@@ -60,12 +23,12 @@ type LocationContextType = {
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isDriver } = useAuth();
-  const [busLocations, setBusLocations] = useState<BusLocations>(SAMPLE_BUS_DATA);
+  const { user, isDriver, isParent } = useAuth();
   const [driverLocation, setDriverLocation] = useState<LocationCoords | null>(null);
+  const [childrenBuses, setChildrenBuses] = useState<ChildBusInfo[]>([]);
+  const [busLocations, setBusLocations] = useState<any[]>([]);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [locationSubscription, setLocationSubscription] = useState<Location.LocationSubscription | null>(null);
-  const [yjsDoc, setYjsDoc] = useState<any>(null);
   
   // Request location permissions
   useEffect(() => {
@@ -82,42 +45,12 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     requestPermissions();
   }, []);
   
-  // Setup YJS connection
-  useEffect(() => {
-    const setupYjs = async () => {
-      // Make sure user and user.busId exist before proceeding
-      if (isDriver && user && typeof user.busId === 'string') {
-        try {
-          const doc = await setupYjsConnection(user.busId);
-          setYjsDoc(doc);
-        } catch (error) {
-          console.log('Error setting up YJS connection:', error);
-          // Don't set the YJSDoc if there's an error
-        }
-      }
-    };
-    
-    setupYjs();
-    
-    return () => {
-      // Cleanup YJS connection when component unmounts
-      if (yjsDoc) {
-        try {
-          yjsDoc.destroy();
-        } catch (error) {
-          console.log('Error destroying YJS connection:', error);
-        }
-      }
-    };
-  }, [isDriver, user]);
-  
-  // Start/stop location tracking for driver
+  // Handle driver location tracking
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
     
     const startLocationTracking = async () => {
-      // Make sure user, user.busId, and all necessary conditions are met
-      if (isDriver && user?.isActive && locationPermission && typeof user.busId === 'string') {
+      if (isDriver && user?.isActive && locationPermission && user.busId) {
         try {
           // Get initial location
           const initialLocation = await Location.getCurrentPositionAsync({
@@ -131,19 +64,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           
           setDriverLocation(location);
           
-          // Send to YJS - make sure yjsDoc and busId both exist
-          if (yjsDoc && typeof user.busId === 'string') {
-            try {
-              updateLocation(yjsDoc, user.busId, {
-                ...location,
-                driverName: user.name,
-                status: 'active',
-                lastUpdated: new Date().toISOString(),
-              });
-            } catch (error) {
-              console.log('Error updating YJS location:', error);
-            }
-          }
+          // Send location to Supabase
+          await updateBusLocation(user.busId, location.latitude, location.longitude);
           
           // Watch location changes
           subscription = await Location.watchPositionAsync(
@@ -152,7 +74,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               distanceInterval: 10, // Update every 10 meters
               timeInterval: 5000,   // Or at least every 5 seconds
             },
-            (newLocation) => {
+            async (newLocation) => {
               const updatedLocation = {
                 latitude: newLocation.coords.latitude,
                 longitude: newLocation.coords.longitude,
@@ -160,31 +82,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               
               setDriverLocation(updatedLocation);
               
-              // Send to YJS - make sure yjsDoc and busId both exist
-              if (yjsDoc && typeof user.busId === 'string') {
-                try {
-                  updateLocation(yjsDoc, user.busId, {
-                    ...updatedLocation,
-                    driverName: user.name,
-                    status: 'active',
-                    lastUpdated: new Date().toISOString(),
-                  });
-                } catch (error) {
-                  console.log('Error updating YJS location:', error);
-                }
-              }
-              
-              // Update local state with new driver location - make sure busId exists
-              if (typeof user.busId === 'string') {
-                setBusLocations(prev => ({
-                  ...prev,
-                  [user.busId as string]: {
-                    ...prev[user.busId as string],
-                    location: updatedLocation,
-                    lastUpdated: new Date().toISOString(),
-                  }
-                }));
-              }
+              // Send location to Supabase
+              await updateBusLocation(user.busId!, updatedLocation.latitude, updatedLocation.longitude);
             }
           );
           
@@ -195,7 +94,9 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
     
-    startLocationTracking();
+    if (isDriver && user?.isActive && user.busId) {
+      startLocationTracking();
+    }
     
     // Cleanup location tracking when component unmounts or driver clocks out
     return () => {
@@ -203,46 +104,75 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         subscription.remove();
       }
     };
-  }, [isDriver, user?.isActive, locationPermission, yjsDoc]);
+  }, [isDriver, user?.isActive, locationPermission, user?.busId]);
   
   // When driver clocks out, stop location tracking
   useEffect(() => {
     if (!user?.isActive && locationSubscription) {
       locationSubscription.remove();
       setLocationSubscription(null);
-      
-      // Update status in YJS - make sure yjsDoc, busId, and driverLocation all exist
-      if (yjsDoc && user && typeof user.busId === 'string' && driverLocation) {
-        try {
-          updateLocation(yjsDoc, user.busId, {
-            ...driverLocation,
-            status: 'inactive',
-            lastUpdated: new Date().toISOString(),
-          });
-        } catch (error) {
-          console.log('Error updating YJS status on clock out:', error);
-        }
-      }
     }
   }, [user?.isActive, locationSubscription]);
   
-  // Function to get bus data for parents
-  const getChildrenBuses = (): ChildBusInfo[] => {
-    if (!user || user.type !== 'parent' || !user.children) return [];
+  // Handle parent location monitoring
+  useEffect(() => {
+    if (!isParent || !user) return;
     
-    return user.children.map(child => {
-      return {
-        childName: child.name,
-        bus: busLocations[child.busId] || { status: 'unknown' }
-      };
+    // Initial fetch
+    refreshChildrenBuses();
+    
+    // Set up subscription for real-time updates
+    const subscription = subscribeToLocationUpdates(() => {
+      refreshChildrenBuses();
     });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isParent, user]);
+  
+  // Function to fetch children's buses for parents
+  const refreshChildrenBuses = async () => {
+    if (!isParent || !user) return;
+    
+    try {
+      const busesData = await getChildrenWithBuses(user.id);
+      setBusLocations(busesData);
+      
+      const mappedBuses = busesData.map((busInfo: any) => ({
+        childName: busInfo.child_name,
+        bus: {
+          id: busInfo.bus_id,
+          name: busInfo.bus_name,
+          location: {
+            latitude: busInfo.latitude,
+            longitude: busInfo.longitude,
+          },
+          driverName: busInfo.driver_name || 'Unknown Driver',
+          status: busInfo.status || 'inactive',
+          lastUpdated: busInfo.last_updated || new Date().toISOString(),
+          estimatedArrival: busInfo.estimated_arrival || calculateEstimatedArrival(),
+        }
+      }));
+      
+      setChildrenBuses(mappedBuses);
+    } catch (error) {
+      console.error('Error fetching children buses:', error);
+    }
+  };
+  
+  // Helper function to get children's buses (for components)
+  const getChildrenBuses = () => {
+    return childrenBuses;
   };
   
   return (
     <LocationContext.Provider value={{
       driverLocation,
+      childrenBuses,
       busLocations,
       getChildrenBuses,
+      refreshChildrenBuses,
       hasLocationPermission: locationPermission,
       isTrackingActive: !!locationSubscription,
     }}>
