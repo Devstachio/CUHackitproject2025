@@ -10,6 +10,10 @@ const Dashboard = () => {
     const [busLocations, setBusLocations] = useState([]);
     const [selectedBus, setSelectedBus] = useState(null);
     const [busPosition, setBusPosition] = useState({ top: 50, left: 20 }); // New state for bus position
+    const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
+    const [childName, setChildName] = useState('');
+    const [busRoute, setBusRoute] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(''); // New state for success message
 
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
     const busPositions = [
@@ -43,8 +47,16 @@ const Dashboard = () => {
         setBusPosition(busPositions[index]);
     };
 
+    const handleAddChild = () => {
+        // Logic to add child to the bus route
+        console.log(`Adding child: ${childName}, Bus: ${busRoute}`);
+        setShowPopup(false); // Close the popup after adding child
+        setSuccessMessage('Child added successfully!'); // Set success message
+        setTimeout(() => setSuccessMessage(''), 3000); // Clear success message after 3 seconds
+    };
+
     return (
-        <div className="flex h-full min-h-screen">
+        <div className="flex h-full min-h-screen relative">
             <div className="w-1/4 bg-gray-100 p-4">
                 <h2 className="text-lg font-bold mb-4">Schools</h2>
                 <ul>
@@ -89,6 +101,53 @@ const Dashboard = () => {
             ) : (
                 <div className="w-3/4 flex justify-center items-center">
                     <h2 className="text-3xl text-white font-bold">Select a School</h2>
+                </div>
+            )}
+            <button
+                className="absolute bottom-4 right-4 bg-blue-500 text-white p-2 rounded"
+                onClick={() => setShowPopup(true)}
+            >
+                Add Child to Bus Route
+            </button>
+            {showPopup && (
+                <div className="absolute inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-4 rounded shadow-lg">
+                        <h2 className="text-lg font-bold mb-4">Add Child to Bus Route</h2>
+                        <input
+                            type="text"
+                            placeholder="Child Name"
+                            value={childName}
+                            onChange={(e) => setChildName(e.target.value)}
+                            className="border p-2 mb-2 w-full"
+                        />
+                        <select
+                            value={selectedBus}
+                            onChange={(e) => setBusRoute(e.target.value)}
+                            className="border p-2 mb-4 w-full"
+                        >
+                            <option value="" disabled>Select Bus</option>
+                            {buses.map((bus) => (
+                                <option key={bus.id} value={bus.id}>{bus.name}</option>
+                            ))}
+                        </select>
+                        <button
+                            className="bg-blue-500 text-white p-2 rounded mr-2"
+                            onClick={handleAddChild}
+                        >
+                            Add Child
+                        </button>
+                        <button
+                            className="bg-gray-500 text-white p-2 rounded"
+                            onClick={() => setShowPopup(false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+            {successMessage && (
+                <div className="absolute bottom-4 left-4 bg-green-500 text-white p-2 rounded">
+                    {successMessage}
                 </div>
             )}
         </div>
